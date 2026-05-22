@@ -113,7 +113,6 @@ public class Game1 : Game
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
-
             _spriteBatch.Begin();
 
             if (currentScreen == Screen.Intro)
