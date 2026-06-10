@@ -45,6 +45,7 @@ namespace Aayan_s_Grade_11_Final_Project
         Rectangle barrierrect;
         Rectangle ship;
         Rectangle ship2;
+        Rectangle boss;
 
         Texture2D introScreen;
         Texture2D backgroundTexture;
@@ -60,6 +61,7 @@ namespace Aayan_s_Grade_11_Final_Project
         Texture2D alien5;
         Texture2D alien6;
         Texture2D alienLaserTexture;
+        Texture2D bossTexture;
 
         int shipSpeed = 5;
         int menuChoice = 0;
@@ -90,7 +92,7 @@ namespace Aayan_s_Grade_11_Final_Project
 
             currentScreen = Screen.Intro;
             ship = new Rectangle(window.Width / 2 - 40, 500, 80, 80);
-            ship2 = new Rectangle(130, 500, 80, 80);
+            boss = new Rectangle(270, 50, 250, 200);
             barriers.Add(new Rectangle(80, 400, 180, 60));
             barriers.Add(new Rectangle(313, 400, 180, 60));
             barriers.Add(new Rectangle(545, 400, 180, 60));
@@ -154,6 +156,8 @@ namespace Aayan_s_Grade_11_Final_Project
             alien5 = Content.Load<Texture2D>("Alien 5");
             alien6 = Content.Load<Texture2D>("Alien 6");
             alienLaserTexture = Content.Load<Texture2D>("alien_lazer");
+            bossTexture = Content.Load<Texture2D>("AldworthBoss");
+
 
 
             for (int row = 0; row < 6; row++)
@@ -202,14 +206,14 @@ namespace Aayan_s_Grade_11_Final_Project
             {
                 if (keyboard.IsKeyDown(Keys.Up) && previousKeyboard.IsKeyUp(Keys.Up))
                 {
-                    menuChoice--;
+                    menuChoice -= 1;
                     if (menuChoice < 0)
-                        menuChoice = 1;
+                        menuChoice = 2;
                 }
                 if (keyboard.IsKeyDown(Keys.Down) && previousKeyboard.IsKeyUp(Keys.Down))
                 {
-                    menuChoice++;
-                    if (menuChoice > 1)
+                    menuChoice += 1;
+                    if (menuChoice > 2)
                         menuChoice = 0;
                 }
                 if ((keyboard.IsKeyDown(Keys.Enter)) && previousKeyboard.IsKeyUp(Keys.Enter))
@@ -222,11 +226,15 @@ namespace Aayan_s_Grade_11_Final_Project
                     {
                         currentScreen = Screen.Tutorial;
                     }
+                    else if (menuChoice == 2)
+                    {
+                        currentScreen = Screen.Boss;
+                    }
                 }
                 previousKeyboard = keyboard;
             }
 
-            if (currentScreen == Screen.Single || currentScreen == Screen.Boss)
+            if (currentScreen == Screen.Single)
             {
 
                 {
@@ -372,18 +380,66 @@ namespace Aayan_s_Grade_11_Final_Project
                             }
                         }
                     }
+
                     if (score >= 3000)
                     {
                         currentScreen = Screen.Boss;
                     }
-
                 }
-                previousKeyboard = keyboard;
-                base.Update(gameTime);
-
             }
-        }
 
+            if (currentScreen == Screen.Boss)
+            {
+                if (keyboard.IsKeyDown(Keys.Left) && ship.X > 0)
+                {
+                    ship.X -= shipSpeed;
+                }
+
+                if (keyboard.IsKeyDown(Keys.Right) && ship.Right < window.Width)
+                {
+                    ship.X += shipSpeed;
+                }
+
+                if (keyboard.IsKeyDown(Keys.Space) && previousKeyboard.IsKeyUp(Keys.Space))
+                {
+                    shipLasers.Add(new Rectangle(ship.X + ship.Width / 2 - 5, ship.Y, 10, 20));
+                }
+
+                for (int i = shipLasers.Count - 1; i >= 0; i--)
+                {
+                    shipLasers[i] = new Rectangle(shipLasers[i].X, shipLasers[i].Y - 8, shipLasers[i].Width, shipLasers[i].Height);
+
+                    if (shipLasers[i].Y < 0)
+                    {
+                        shipLasers.RemoveAt(i);
+                    }
+                }
+
+                for (int i = alienLasers.Count - 1; i >= 0; i--)
+                {
+                    alienLasers[i] = new Rectangle(alienLasers[i].X, alienLasers[i].Y + 6, alienLasers[i].Width, alienLasers[i].Height);
+
+                    if (alienLasers[i].Y > window.Height)
+                    {
+                        alienLasers.RemoveAt(i);
+                    }
+                    else if (alienLasers[i].Intersects(ship))
+                    {
+                        alienLasers.RemoveAt(i);
+
+                        shipLives -= 1;
+                        lives.RemoveAt(lives.Count - 1);
+
+                        if (shipLives <= 0)
+                        {
+                            currentScreen = Screen.End;
+                        }
+                    }
+                }
+            }
+            previousKeyboard = keyboard;
+            base.Update(gameTime);
+        }
         protected override void Draw(GameTime gameTime)
         {
          
@@ -399,13 +455,22 @@ namespace Aayan_s_Grade_11_Final_Project
                 {
                     _spriteBatch.DrawString(font, "> 1: SI Game", new Vector2(290, 420), neonGreen);
                     _spriteBatch.DrawString(font, " 2: Tutorial", new Vector2(290, 445), Color.White);
+                    _spriteBatch.DrawString(font, " Boss Fight", new Vector2(600, 10), Color.White);
 
                 }
-                else
+                else if (menuChoice == 1)
                 {
                     _spriteBatch.DrawString(font, " 1: SI Game", new Vector2(290, 420), Color.White);
                     _spriteBatch.DrawString(font, "> 2: Tutorial", new Vector2(290, 445), neonGreen);
+                    _spriteBatch.DrawString(font, " Boss Fight", new Vector2(600, 10), Color.White);
                 }
+                else if (menuChoice == 2)
+                {
+                    _spriteBatch.DrawString(font, " 1: SI Game", new Vector2(290, 420), Color.White);
+                    _spriteBatch.DrawString(font, " 2: Tutorial", new Vector2(290, 445), Color.White);
+                    _spriteBatch.DrawString(font, " > Boss Fight", new Vector2(575, 10), neonGreen);
+                }
+
             }
             else if (currentScreen == Screen.Single)
             {
@@ -457,7 +522,8 @@ namespace Aayan_s_Grade_11_Final_Project
 
                 _spriteBatch.Draw(backgroundTexture, window, Color.White);
                 _spriteBatch.Draw(shipTexture, ship, Color.White);
-                _spriteBatch.DrawString(font, "FINAL BOSS FIGHT", new Vector2(260, 10), Color.White);
+                _spriteBatch.Draw(bossTexture, boss, Color.White);
+                _spriteBatch.DrawString(font, "FINAL BOSS FIGHT", new Vector2(280, 10), Color.White);
 
                 for (int i = 0; i < barriers.Count; i++)
                 {
@@ -480,11 +546,6 @@ namespace Aayan_s_Grade_11_Final_Project
                 for (int i = 0; i < shipLasers.Count; i++)
                 {
                     _spriteBatch.Draw(laserTexture, shipLasers[i], Color.White);
-                }
-
-                for (int i = 0; i < aliens.Count; i++)
-                {
-                    _spriteBatch.Draw(alienTextures[i], aliens[i], alienColor[i]);
                 }
 
                 for (int i = 0; i < lives.Count; i++)
