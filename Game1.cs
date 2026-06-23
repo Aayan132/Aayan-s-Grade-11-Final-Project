@@ -909,11 +909,11 @@ namespace Aayan_s_Grade_11_Final_Project
 
                 for (int i = 0; i < barriers.Count; i++)
                 {
-                    if (barriersHealth[i] >= 300)
+                    if (barriersHealth[i] >= 700)
                     {
                         _spriteBatch.Draw(ogBarrier, barriers[i], Color.MediumPurple);
                     }
-                    else if (barriersHealth[i] >= 150)
+                    else if (barriersHealth[i] >= 350)
                     {
                         _spriteBatch.Draw(slightBarrier, barriers[i], Color.MediumPurple);
                     }
