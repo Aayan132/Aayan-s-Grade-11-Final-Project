@@ -145,12 +145,30 @@
 /processorParam:Quality=Best
 /build:AlienDeathSound.wav
 
+#begin BossBomb.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:BossBomb.png
+
 #begin font.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:PremultiplyAlpha=True
 /processorParam:TextureFormat=Compressed
 /build:font.spritefont
+
+#begin GameplayMusic.wav
+/importer:WavImporter
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:GameplayMusic.wav
 
 #begin LaserSound.wav
 /importer:WavImporter
@@ -181,6 +199,12 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Lazer_Image.png
+
+#begin Main Menu Song.wav
+/importer:WavImporter
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:Main Menu Song.wav
 
 #begin OGBarrier.png
 /importer:TextureImporter

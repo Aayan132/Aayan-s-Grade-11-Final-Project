@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Xna.Framework.Audio;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.Xna.Framework.Media;
 
 namespace Aayan_s_Grade_11_Final_Project
 {
@@ -26,6 +27,7 @@ namespace Aayan_s_Grade_11_Final_Project
 
         Random rng = new Random();
 
+        List<Rectangle> bossBombs = new List<Rectangle>();
         List<Color> alienLaserColors = new List<Color>();
         List<Rectangle> aliens = new List<Rectangle>();
         List<Color> alienColor = new List<Color>();
@@ -47,6 +49,9 @@ namespace Aayan_s_Grade_11_Final_Project
         SoundEffect aldworthDefeated;
         SoundEffect shipLifeLost;
 
+        Song menuMusic;
+        Song gameplayMusic;
+
         Rectangle window;
         Rectangle ship;
         Rectangle boss;
@@ -66,6 +71,7 @@ namespace Aayan_s_Grade_11_Final_Project
         Texture2D alien6;
         Texture2D alienLaserTexture;
         Texture2D bossTexture;
+        Texture2D bossBombTexture;
 
         int shipSpeed = 5;
         int menuChoice = 0;
@@ -159,6 +165,15 @@ namespace Aayan_s_Grade_11_Final_Project
             }
         }
 
+        void PlayMusic(Song song)
+        {
+            if (MediaPlayer.State == MediaState.Playing)
+                MediaPlayer.Stop();
+
+            MediaPlayer.IsRepeating = true;
+            MediaPlayer.Play(song);
+        }
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -180,14 +195,15 @@ namespace Aayan_s_Grade_11_Final_Project
             barriers.Add(new Rectangle(80, 400, 180, 60));
             barriers.Add(new Rectangle(313, 400, 180, 60));
             barriers.Add(new Rectangle(545, 400, 180, 60));
-            barriersHealth.Add(500);
-            barriersHealth.Add(500);
-            barriersHealth.Add(500);
+            barriersHealth.Add(1000);
+            barriersHealth.Add(1000);
+            barriersHealth.Add(1000);
             lives.Add(new Rectangle(10, 565, 30, 30));
             lives.Add(new Rectangle(50, 565, 30, 30));
             lives.Add(new Rectangle(90, 565, 30, 30));
             neonGreen = new Color(57, 255, 20);
 
+            previousKeyboard = Keyboard.GetState();
             base.Initialize();
         }
 
@@ -215,8 +231,12 @@ namespace Aayan_s_Grade_11_Final_Project
             aldworthDefeated = Content.Load<SoundEffect>("AldworthBeat");
             alienDeathSound = Content.Load<SoundEffect>("AlienDeathSound");
             shipLifeLost = Content.Load<SoundEffect>("ShipHitSound");
+            bossBombTexture = Content.Load<Texture2D>("BossBomb");
+            menuMusic = Content.Load<Song>("Main Menu Song");
+            gameplayMusic = Content.Load<Song>("GameplayMusic");
 
             SpawnWave();
+            PlayMusic(gameplayMusic);
         }
 
         protected override void Update(GameTime gameTime)
@@ -256,14 +276,17 @@ namespace Aayan_s_Grade_11_Final_Project
                     if (menuChoice == 0)
                     {
                         currentScreen = Screen.Single;
+                        PlayMusic(menuMusic);
                     }
                     else if (menuChoice == 1)
                     {
                         currentScreen = Screen.Endless;
+                        PlayMusic(menuMusic);
                     }
                     else if (menuChoice == 2)
                     {
                         currentScreen = Screen.Boss;
+                        PlayMusic(menuMusic);
                     }
                 }
 
@@ -428,6 +451,7 @@ namespace Aayan_s_Grade_11_Final_Project
                         }
                     }
                 }
+
                 if (score >= 3000)
                 {
                     currentScreen = Screen.Boss;
@@ -684,7 +708,17 @@ namespace Aayan_s_Grade_11_Final_Project
                 if (rng.Next(bossShootChance) == 1)
                 {
                     alienLasers.Add(new Rectangle(boss.Center.X - 5, boss.Bottom, 10, 25));
-                    alienLaserColors.Add(Color.Blue);
+                    alienLaserColors.Add(Color.Purple);
+                }
+
+                if (rng.Next(250) == 1)
+                {
+                    bossBombs.Add(new Rectangle(boss.X + 25, boss.Y + 115, 30, 30));
+                }
+
+                if (rng.Next(250) == 1)
+                {
+                    bossBombs.Add(new Rectangle(boss.Right - 55, boss.Y + 115, 30, 30));
                 }
 
                 for (int l = shipLasers.Count - 1; l >= 0; l--)
@@ -739,11 +773,59 @@ namespace Aayan_s_Grade_11_Final_Project
                     {
                         bossShootChance = 25;
                     }
-                }
 
-                previousKeyboard = keyboard;
-                base.Update(gameTime);
+                    for (int j = bossBombs.Count - 1; j >= 0; j--)
+                    {
+                        bossBombs[j] = new Rectangle(bossBombs[j].X, bossBombs[j].Y + 3, bossBombs[j].Width, bossBombs[j].Height);
+
+                        if (bossBombs[j].Y > window.Height)
+                        {
+                            bossBombs.RemoveAt(j);
+                            break;
+                        }
+
+                        if (bossBombs[j].Intersects(ship))
+                        {
+                            bossBombs.RemoveAt(j);
+
+                            shipLives--;
+
+                            if (lives.Count > 0)
+                            {
+                                lives.RemoveAt(lives.Count - 1);
+                                shipLifeLost.Play();
+                            }
+
+                            if (shipLives <= 0)
+                            {
+                                currentScreen = Screen.Loss;
+                            }
+
+                            continue;
+                        }
+
+                        for (int b = barriers.Count - 1; b >= 0; b--)
+                        {
+                            if (bossBombs[j].Intersects(barriers[b]))
+                            {
+                                bossBombs.RemoveAt(j);
+
+                                barriersHealth[b] -= 100;
+
+                                if (barriersHealth[b] <= 0)
+                                {
+                                    barriers.RemoveAt(b);
+                                    barriersHealth.RemoveAt(b);
+                                }
+
+                                break;
+                            }
+                        }
+                    }
+                }
             }
+            previousKeyboard = keyboard;
+            base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
@@ -783,11 +865,11 @@ namespace Aayan_s_Grade_11_Final_Project
 
                 for (int i = 0; i < barriers.Count; i++)
                 {
-                    if (barriersHealth[i] >= 300)
+                    if (barriersHealth[i] >= 700)
                     {
                         _spriteBatch.Draw(ogBarrier, barriers[i], Color.MediumPurple);
                     }
-                    else if (barriersHealth[i] >= 150)
+                    else if (barriersHealth[i] >= 350)
                     {
                         _spriteBatch.Draw(slightBarrier, barriers[i], Color.MediumPurple);
                     }
@@ -854,6 +936,11 @@ namespace Aayan_s_Grade_11_Final_Project
                 for (int i = 0; i < lives.Count; i++)
                 {
                     _spriteBatch.Draw(shipTexture, lives[i], Color.White);
+                }
+
+                for (int i = 0; i < bossBombs.Count; i++)
+                {
+                    _spriteBatch.Draw(bossBombTexture, bossBombs[i], Color.White);
                 }
             }
             else if (currentScreen == Screen.Win)
